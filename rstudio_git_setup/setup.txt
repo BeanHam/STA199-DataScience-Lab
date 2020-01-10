@@ -1,15 +1,3 @@
----
-title: "RStudio and Git Setup Guide"
-author: "Bin Han"
-date: "1/10/2020"
-output:
-  html_document: default
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## RStudio
 To install RStudio, please visit: https://courses.edx.org/courses/UTAustinX/UT.7.01x/3T2014/56c5437b88fa43cf828bff5371c6a924/
 
