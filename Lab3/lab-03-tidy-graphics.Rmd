@@ -1,0 +1,81 @@
+---
+title: "Lab 03 - Tidy Graphics and Teamwork"
+subtitle: "Due: Monday, Feb 3 at 11:59pm"
+author: "Bin Han"
+date: "1/31/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Packages
+
+```{r packages, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+## Exercise 1
+
+## Exercise 2
+
+```{r}
+nerrs <- read_csv("data/nerrs.csv")
+```
+
+## Exercise 3
+
+```{r}
+ggplot(data=nerrs, aes(x=compound, y=concentration))+
+    geom_bar(stat = "identity")+
+    facet_grid(~date)+
+    coord_flip()
+```
+
+
+```{r}
+ggplot(data=nerrs, aes(x=compound, y=concentration, fill=date))+
+    geom_bar(stat = "identity")+
+    coord_flip()
+```
+
+```{r}
+ggplot(data=nerrs, aes(x=reorder(compound, concentration), 
+                       y=concentration, 
+                       fill=date)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label=concentration), 
+            position=position_dodge(width=0.9),
+            hjust=-0.1,
+            size=3) +
+  coord_flip()
+```
+
+
+## Exercise 4
+
+1. The orientation of the graph makes it hard to compare between dates. It would 
+be better to orientate the two dates horizontally so that for each compound, we 
+can compare horizontally instead of vertically.
+
+2. The color is based on the compounds, which might be overwhelming. It would be
+better if we put compound on the axis and color them based on date.
+
+## Exercise 5
+
+
+
+*****
+
+## Final checks
+
+1. Did every team member commit?
+2. Do all code chunks have names?
+3. Are your figures appropriately sized?
+4. Is all code and narrative following the 80 characters rule?
+5. Did you proofread your narrative and run spell checker (button next to save)? 
+
+*****
+
+
+
