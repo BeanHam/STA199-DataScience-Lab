@@ -123,19 +123,83 @@ loaded R packages.
 | `bbd`         | walk differential       | `bb`− `bba`, walks minus walks allowed               |
 | `sod`         | strike out differential | `so` − `soa`, strikeouts minus strikeouts allowed    |
 
+
+```{r}
+teams = teams_default %>% 
+   mutate(win_pct = w/g,
+          rd = r - ra,
+          hd = h - ha,
+          bbd = bb - bba,
+          sod = so - soa)
+```
+
 2. Create scatter plots of win percentage versus the four differential variables
    you created in Task 1: `rd`, `hd`, `bbd`, `sod`. Which variable appears to 
    have the strongest correlation with a team’s win percentage? Which variable 
    appears to have the weakest correlation with a team’s win percentage? 
    Compute these correlations.
-   
+
+```{r}
+
+ggplot(data = teams,
+       aes(x = rd, y = win_pct))+
+   geom_point()
+
+ggplot(data = teams,
+       aes(x = hd, y = win_pct))+
+   geom_point()
+
+ggplot(data = teams,
+       aes(x = bbd, y = win_pct))+
+   geom_point()
+
+ggplot(data = teams,
+       aes(x = sod, y = win_pct))+
+   geom_point()
+
+```
+
+```{r}
+teams %>% 
+   select(win_pct, rd, hd, bbd, sod) %>% 
+   cor()
+```
+
+__note__:
+rd seems to have the strongest correlation with the win percentage.
+
+
 3. Create a scatter plot to visualize the relationship between `rank` and 
    `win_pct`. Describe the relationship you observe.
+
+```{r}
+ggplot(data = teams,
+       aes(x = rank, y = win_pct)) +
+   geom_point()
+```
+
+__NOTE__:
+
+higher-ranked teams seem to have higher win percentage over the lower-ranked 
+teams.
+
 
 4. Recreate your visualization in Exercise 3, but this time use 
    `geom_boxjitter()` from package `ggpol`. Briefly describe what this geom does
    and if the resulting visualization is more or less informative than that in
    Exercise 3.
+
+```{r}
+ggplot(data = teams,
+       aes(x = as.factor(rank), y = win_pct)) +
+   geom_boxjitter()
+```
+
+__NOTE__:
+
+This is more informative since now the overlapped points are scattered around 
+and we can see the distribution of win percentage more clearly.
+
 
 ## Model building (quantitative predictor)
 
@@ -146,26 +210,66 @@ The linear model is of the form $\hat{y} = b_0 + b_1 x$.
 5. Fit a linear model called `lm_rd`, where run differential is the explanatory
    variable and win percentage is the response. Based on the regression output, 
    write out the linear model.
-   
+
+```{r}
+lm_rd = lm(data = teams,
+           win_pct ~ rd)
+tidy(lm_rd)
+```
+
+$$\hat{win\_pct} = 0.500 + 0.0006*rd$$
+
 6. Recreate your visualization in Exercise 2 for only the variable run
    differential, but now add the fitted regression line to the plot in a
    contrasting color to that of your points.
-   
+
+```{r}
+ggplot(data = teams,
+       aes(x = rd, y = win_pct)) +
+   geom_point() + 
+   geom_smooth(method = "lm", se = FALSE)
+```
+
+
 7. Interpret the slope and intercept of this linear model in the context of the
    data. Comment on whether or not the intercept interpretation makes sense 
    with regards to this data.
+
+__NOTE__:
+
+ - Intercept: when the run differential is equal to 0, the win percentage is 
+   expected to be 50%. Yes, makes senses
+   
+ - Slope: for every one point incrase in the run differential, the win 
+   percentage is expected to increase by 0.000589 percentage point.
+   
    
 8. Determine the $R^2$ of the model and interpret it in context of the data.
+
+```{r}
+lm_rd %>% 
+   glance() %>% 
+   pull(r.squared)
+```
+
+__NOTE__:
+
+About 85.9% of the variance in the responce variable is explained by the run
+differential variable.
+
 
 9. Fit a linear model called `lm_sod`, where strike out differential is the 
    explanatory variable and win percentage is the response. Based on the 
    regression output, write out the linear model.
    
-```{marginfigure}
-You will need to get statistics `R` and `SO` from `Team Standard Batting`
-and `Team Standard Pitching`, and then take their respective differences
-to get the 2019 run and strikeout differentials.
-```   
+```{r}
+lm_sod = lm(data = teams,
+            win_pct ~ sod)
+tidy(lm_sod)
+```
+
+
+$$\hat{win\_pct} = 0.500 - 0.000237*sod$$
 
 10. Choose an MLB team. Go to
     https://www.baseball-reference.com/leagues/MLB/2019.shtml#all_teams_standard_batting
@@ -173,24 +277,87 @@ to get the 2019 run and strikeout differentials.
     differential. Using each of your models, `lm_rd` and `lm_sod`, which model
     does better at predicting your selected team's actual 2019 win percentage?
 
+
+__NOTE__:
+
+Arizona Diamondbacks:
+
+- For "runs scored" and "strikeouts", you need to check the standard batting 
+table. Ex: Phillies: runs allowed: 774; strikeouts: 1453
+- For "runs allowed" and "strikeouts allowed", you need to check the standard
+pitching table. Ex: Phillies: runs allowed: 794; strikeouts allowed: 1392
+
+```{r}
+## prediction from lm_rd
+0.5 + 0.000598*(774-794)
+
+## prediction from lm_sod
+0.5 - 0.000237*(1453-1392)
+```
+
+__NOTE__:
+
+actual win rate: 0.5, close to predictions.
+
+
 ## Model building (categorical predictor)
 
 11. Fit a linear model called `lm_rank`, where rank is the explanatory
     variable and win percentage is the response. Based on the regression output, 
     write out the linear model.
-    
+
+```{r}
+lm_rank = lm(data = teams,
+            win_pct ~ as.factor(rank))
+tidy(lm_rank)
+```
+
+$$\hat{win\_pct} = 0.5888 - 0.0508*rank2 - 0.0869*rank3 - 0.1333*rank4 - 0.1743*rank5$$
+
+
 12. Interpret the coefficients of model `lm_rank`.
 
-```{marginfigure}
-Try `mutate()` and `fct_relevel()`.
-```
+The baseline level is the first rank and the coefficients from other ranks 
+represent the difference in win percentage between the corresponding rank and 
+the baseline rank. For instance, if the team has rank 2, the expected win
+percentage is 0.05 percentage point lower than the team with the first rank. 
+The intercept represents the expected win percentage for first-ranked team.
+
 
 13. Refit your model from Exercise 11, but set the baseline level to when the
     rank is 5. Save this linear model as an object called `lm_rank_base5`.
     How do the coefficients of this model compare to those in Exercise 11?
-    
+
+```{r}
+teams_fct_rank <- teams %>% 
+   mutate(rank = factor(rank),
+          rank = fct_relevel(rank, "5"))
+
+lm_rank_base5 = lm(win_pct ~ rank,
+                   data = teams_fct_rank)
+tidy(lm_rank_base5)
+```
+
+The intercept and coefficients for rank 1-3 have changed. But with some further
+calculation, we noticed that the expected win percetage does not chaneg for each
+rank.
+
 14. Compare $R^2$ for models `lm_rank` and `lm_rank_base5`. Is this what you
     would expect? Explain your answer.
+
+```{r}
+lm_rank %>% 
+   glance() %>% 
+   pull(r.squared)
+
+lm_rank_base5 %>% 
+   glance() %>% 
+   pull(r.squared)
+```
+
+__NOTE__:
+
+Expected to be the same since we have the same explanatory variable. 
 
 ## Submission
 
