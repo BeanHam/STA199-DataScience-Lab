@@ -148,21 +148,70 @@ submission should be made per team.
 1. What does each observation represent in this dataset? How many variables are 
 in this dataset? What type of variable is each? 
 
+#The information of each passenger.
+
+
+
 2. Summarize the proportion of surviving passengers who survived in each class. 
 What are the conditional probabilities of survival for each of the passenger 
 classes, and among crewmembers? 
+
+```{r}
+titanic %>% 
+    group_by(Class) %>% 
+    count(Survive) %>% 
+    mutate(proportion = n/sum(n))
+```
+
 
 3. Create a data visualization that examines overall survival probability of 
 third-class passengers compared to crew members. Do not include information 
 regarding first or second class passengers; we are not interested in them!
 
+```{r}
+visualiztion_data = titanic %>% 
+    filter(Class %in% c("Third", "Crew"))
+
+ggplot(visualiztion_data, 
+       mapping = aes(x=Class, fill=Survive))+
+    geom_bar(position = "fill")
+```
+
+The crew members have a lower survival rate.
+
+
 4. You suspect that there is a case of Simpson's paradox going on. Recreate your
 visualization from Exercise 3, this time faceting by categories of a third 
 variable.
 
+
+```{r}
+ggplot(visualiztion_data, 
+       mapping = aes(x=Class, fill=Survive)) +
+    geom_bar(position = "fill") +
+    facet_wrap(~Age)
+```
+
+```{r}
+ggplot(visualiztion_data, 
+       mapping = aes(x=Class, fill=Survive)) +
+    geom_bar(position = "fill") +
+    facet_wrap(~Sex)
+```
+
+
 5. What changed, and what might explain this change? Explain the relationship 
 between the three variables in your visualization from Exercise 4 and what you 
 might conclude.
+
+## When we added sex as a covariate, we noticed that the crew members have 
+## higher survival rates than third-class passengers in both gender groups.
+## It could be that there are more way more female passengers in the third-class
+## than female crew members. And females left earlier than males. Therefore, 
+## when we consider all the population within each group together, the survival
+## rate might be biased if we do not consider the sex variable.
+
+
 
 
     
