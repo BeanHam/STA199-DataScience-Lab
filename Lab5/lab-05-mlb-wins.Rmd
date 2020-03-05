@@ -1,12 +1,7 @@
 ---
 title: "Lab 05 - MLB Wins"
 subtitle: "Due: Friday, Feb 21 at 11:59pm"
-output:
-  tufte::tufte_html:
-    tufte_variant: "envisioned"
-    highlight: pygments
-    css: "labs.css"
-link-citations: yes
+output: pdf_document
 ---
 
 ```{r include=FALSE}
@@ -159,6 +154,15 @@ ggplot(data = teams,
 
 ```
 
+
+
+
+
+```{r}
+cor(teams$win_pct, teams$rd, teams$sod)
+```
+
+
 ```{r}
 teams %>% 
    select(win_pct, rd, hd, bbd, sod) %>% 
@@ -200,6 +204,7 @@ __NOTE__:
 This is more informative since now the overlapped points are scattered around 
 and we can see the distribution of win percentage more clearly.
 
+$$\hat{y} = b_0 + b_1\mbox{x}$$
 
 ## Model building (quantitative predictor)
 
@@ -217,7 +222,7 @@ lm_rd = lm(data = teams,
 tidy(lm_rd)
 ```
 
-$$\hat{win\_pct} = 0.500 + 0.0006*rd$$
+$$\hat{\mbox{win_pct}} = 0.500 + 0.0006*\mbox{rd}$$
 
 6. Recreate your visualization in Exercise 2 for only the variable run
    differential, but now add the fitted regression line to the plot in a
