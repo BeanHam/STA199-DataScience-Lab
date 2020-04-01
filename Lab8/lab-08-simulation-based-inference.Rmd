@@ -1,0 +1,182 @@
+---
+title: "Lab 08 - Simulation-based inference"
+subtitle: "Due: Friday, Apr 10 at 11:59pm EST"
+output:
+  tufte::tufte_html:
+    tufte_variant: "envisioned"
+    highlight: pygments
+    css: "labs.css"
+link-citations: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, comment = "#>")
+```
+
+# Introduction
+
+In 2004, the state of North Carolina released a large data set containing 
+information on births recorded in the state. This data set is useful to 
+researchers studying the relation between habits and practices of expectant 
+mothers and the birth of their children. We'll work with a random sample of 
+observations from this data set.
+
+# Getting started
+
+Clone your assignment repo into RStudio Cloud and open the R Markdown file.
+Don't forget to load in the necessary packages and configure git.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(infer)
+library(openintro)
+```
+
+```{r eval=FALSE}
+library(usethis)
+use_git_config(user.name="your name", user.email="your email")
+```
+
+If you would like your git password cached for a week for this project, type 
+the following in the Terminal:
+
+`git config --global credential.helper 'cache --timeout 604800'`
+
+You will need to enter your GitHub username and password one more time after 
+caching the password.This is only good for this single RStudio Cloud project; 
+you will need to cache your credentials for each project you create.
+
+# Data
+
+We'll read in `ncbirths` with
+
+```{r read_nc_births, eval=FALSE}
+data(ncbirths)
+```
+
+In the dataset we have observations on 13 different variables, some categorical 
+and some numerical. The meaning of each variable is as follows.
+
+variable         | description
+---------------- | ---------------------------------------------
+`fage`           | father's age in years.
+`mage`           | mother's age in years.
+`mature`         | maturity status of mother.
+`weeks`          | length of pregnancy in weeks.
+`premie`         | whether the birth was classified as premature (premie) or full-term.
+`visits`         | number of hospital visits during pregnancy.
+`marital`        | whether mother is `married` or `not married` at birth.
+`gained`         | weight gained by mother during pregnancy in pounds.
+`weight`         | weight of the baby at birth in pounds.
+`lowbirthweight` | whether baby was classified as low birthweight (`low`) or not (`not low`).
+`gender`         | gender of the baby, `female` or `male`.
+`habit`          | status of the mother as a `nonsmoker` or a `smoker`.
+`whitemom`       | whether mom is `white` or `not white`.
+
+# Set a seed
+
+Before you get started, set the seed so each person in your group will
+be able to reproduce your analysis.
+
+```{r}
+set.seed(71189752)
+```
+
+# Exercises
+
+In addition to `quantile()`, `diff()`, and `is.na()`, your code should only 
+contain functions from the loaded R packages above unless explicitly stated 
+in an Exercise.
+
+## Baby weights
+
+```{marginfigure}
+Wen, Shi Wu, Michael S. Kramer, and Robert H. Usher. "Comparison of birth weight distributions between Chinese and Caucasian infants." American Journal of Epidemiology 141.12 (1995): 1177-1187.
+````
+
+A 1995 study suggests that the average weight of Caucasian babies born in the 
+U.S. is 3,369 grams (7.43 pounds). In this dataset we only have information on 
+mother's race, so we will make the simplifying assumption that babies of 
+Caucasian mothers are also Caucasian. 
+
+We want to evaluate whether the average weight of Caucasian babies in NC has 
+changed from the 1995 study by performing a simulation-based hypothesis test 
+at the .05 significance level.
+
+1. Write out the hypotheses for this test in words.
+
+2. Write out the hypotheses for this test in symbolic notation.
+
+3. Create a well-labelled plot of the null distribution and shade the
+   p-value.
+   
+4. Compute the p-value and interpret your findings within the context of the
+   data and research question.
+   
+5. Compute a 95% confidence interval for the population mean weight of 
+   Caucasian babies born in NC. Does this interval cover the value of $\mu$
+   under your specified null hypothesis in Exercise 2? Explain why it does
+   or does not.
+   
+## Baby weight vs. smoking
+
+Consider the possible relationship between a mother's smoking habit and the 
+weight of her baby. Plotting the data is a useful first step because it helps 
+us quickly visualize trends, identify strong associations, and develop research
+questions.
+
+6.  Make side-by-side boxplots displaying the relationship between `habit` and 
+    `weight`. What does the plot highlight about the relationship between these 
+    two variables?
+
+7. Before moving forward, save a version of the dataset omitting observations 
+   where there are NAs for `habit`. You can call this version 
+   `ncbirths_habitgiven`.
+
+The box plots show how the medians of the two distributions compare, but we can
+also compare the means of the distributions using the following to 
+first group the data by the `habit` variable, and then calculate the mean
+`weight` in these groups using.
+
+```{r eval=FALSE}
+ncbirths_habitgiven %>%
+  group_by(habit) %>%
+  summarise(mean_weight = mean(weight))
+```
+
+There is an observed difference based on our sample data, but we want to know 
+if the difference is statistically significant. In order to answer this 
+question we will conduct a hypothesis test.
+
+8. Write the hypotheses for testing if the average weights of babies born to 
+   smoking and non-smoking mothers are different. Define the difference as
+   smoking - non-smoking.
+
+9. Perform an appropriate hypothesis test at the 0.10 significance level, 
+   calculate the p-value, and interpret the results in the context of the data 
+   and research question.
+   
+10. Given your conclusion in Exercise 9, which type of error could you possibly
+   have made. What does this mean in the context of the testing problem.
+   
+11. In this testing framework, what is the probability of a type I error?
+
+# Submission
+
+Knit to PDF to create a PDF document. Stage and commit all remaining changes,
+and push your work to GitHub. Make sure all files are updated on your 
+GitHub repo.
+
+Please only upload your PDF document to Gradescope. Associate the “Overall” 
+graded section with the first page of your PDF, and mark where each answer 
+is to the exercises. If any answer spans multiple pages, then mark all pages.
+
+Only one team member needs to submit for the group. After you hit submit, 
+go to View or edit group and select all your team members from the drop-down
+menu.
+
+# References
+
+- Wen, Shi Wu, Michael S. Kramer, and Robert H. Usher. "Comparison of birth 
+  weight distributions between Chinese and Caucasian infants." American 
+  Journal of Epidemiology 141.12 (1995): 1177-1187.

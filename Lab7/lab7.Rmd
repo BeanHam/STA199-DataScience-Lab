@@ -1,0 +1,323 @@
+---
+title: "Lab 07 - Classification"
+subtitle: "Due: Friday, Mar 20 at 11:59pm"
+output: pdf_document
+link-citations: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, comment = "#>")
+```
+
+# Introduction
+
+The `wine` dataset contains the results of a chemical analysis of wines from the
+same area of Italy, but with grapes from two different cultivars. The results 
+of 13 chemical analyses recorded for each sample are provided in the dataset,
+and your goal is to create a classifier using some of these features to classify
+the type of wine (A vs. B).
+
+This dataset is modified and based on data made available by Lichman, M. (2013).
+[http://archive.ics.uci.edu/ml](UCI Machine Learning Repository). Irvine, CA:
+University of California, School of Information and Computer Science.
+
+# Getting started
+
+Clone your assignment repo into RStudio Cloud and open the R Markdown file.
+Don't forget to load in the necessary packages and configure git:
+
+```{r, eval = TRUE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(class)
+library(broom)
+library(usethis)
+```
+
+If you would like your git password cached for a week for this project, type the following in the Terminal:
+
+`git config --global credential.helper 'cache --timeout 604800'`
+
+You will need to enter your GitHub username and password one more time after 
+caching the password.This is only good for this single RStudio Cloud project; 
+you will need to cache your credentials for each project you create.
+
+# Data
+
+To get started, read in the data and save it as an object named `wine`.
+
+```{r read-data, eval = FALSE}
+wine <- read.csv("~/Duke/Spring 2020/STAT 199/STA199-DataScience-Lab/Lab7/data/wine.csv", stringsAsFactors=FALSE)
+```
+
+```{r}
+for i in (1:ncol(wine)){
+    print(wine[,i])
+}
+```
+
+
+# Exercises
+
+Write all R code according to the style guidelines discussed in class. Be 
+especially careful about staying within the 80 character limit. Finally, make 
+sure all code is fully reproducible (e.g., do not "hard-code" in values).
+
+All team members must commit and push to receive full credit.
+
+In addition to glm(), your code should only contain functions from the loaded 
+`R` packages, unless an exercise states otherwise.
+
+For this lab, we are going to focus on the following predictors for wine
+cultivar (`type`, coded as A or B):
+
+| Variable name    | Description 
+|:--------|:-------------------------------
+| `alcohol` | Alcohol content, in ABV
+| `malic` | Malic acid content; malic acid is one of the main flavor compounds in wine
+| `ash` | Ash content; the leftover inorganic matter after evaporation and incineration
+| `phenols` | Total phenol content; phenols are also responsible for affecting the taste of wine
+| `color` | Color intensity; how dark the wine is
+
+## Creating training and testing datasets
+
+First, let's set aside some data for training our models on, and some data for
+testing our models. Run the following code to create a vector of row indices to
+set aside as our test data. **Note that we have set a random seed to ensure
+reproducibility of our results**
+
+```{r create-indices, eval = FALSE}
+set.seed(03052020)
+indices <- sample(nrow(wine), 25) # 25 observations to test on
+```
+
+1. Create two new datasets, `wine_train` and `wine_test`. `wine_train` should
+only contain observations that ARE NOT in the row indices created above, and 
+`wine_test` should only contain observations that ARE in the row indices created
+above. Be careful about what variables are included in the datasets you create. 
+Finally, create a vector of the class labels for the training dataset and call 
+it `train_type`.
+
+```{r}
+wine_train = wine %>% 
+    slice(-indices) %>% 
+    select(alcohol, malic, ash, phenols, color)
+
+wine_test = wine %>% 
+    slice(indices) %>% 
+    select(alcohol, malic, ash, phenols, color)
+
+train_type = wine %>% 
+    slice(-indices) %>% 
+    pull(type)
+```
+
+
+## k-nearest neighbors
+
+2. In this case, we know the true wine types in our test dataset. Create a
+vector of these true wine types and call it `true_type`.
+
+```{r}
+true_type = wine %>% 
+    slice(indices) %>% 
+    pull(type)
+```
+
+
+3. Fit the k-nearest neighbors model on our raw training dataset, using k = 10.
+What percent of our test data was accurately classified? As a hint, consider the
+following code and output:
+
+```{r}
+knn_model = knn(wine_train,
+                wine_test, 
+                train_type,
+                k=10,
+                prob = F,
+                use.all = F)
+```
+
+```{r}
+mean(knn_model == true_type)
+```
+
+
+    ```{r, eval = FALSE}
+    x <- c("A", "B", "C", "A", "B", "C")
+    y <- c("A", "A", "C", "A", "B", "H")
+    x == y
+    mean(x == y)
+    ```
+
+4. Repeat Exercise 1, but with k varying from 1 to 12. Which value of k results
+in the greatest prediction accuracy in our test dataset, and what is the 
+associated prediction accuracy? In doing this exercise, do not "repeat" the same 
+code twelve times. 
+
+```{r}
+set.seed(1)
+acc_pc <- numeric(12)
+for (i in 1:12){
+    knn_model = knn(wine_train,
+                wine_test, 
+                train_type,
+                k=i,
+                prob = F,
+                use.all = F)
+    acc_pc[i] = mean(knn_model == true_type)
+}
+
+which.max(acc_pc)
+```
+
+
+```{r}
+tibble(acc_pc) %>% 
+    slice(which.max(acc_pc))
+```
+
+
+    Hint #1: you may use the `which.max()` function, which returns the *position* 
+    of the maximum value of a vector. 
+    
+    Hint #2: Consider the following code, which creates an empty vector of twelve 
+    observations:
+    
+    ```{r, eval = FALSE}
+    acc_pc <- numeric(12)
+    ```
+    
+    Hint #3: The `tibble()` function can be used to coerce a vector into a tibble.
+
+5. As stated in class, a potential problem for k-NN is that all predictors
+must be on the same measurement scale, which is not the case for our current
+dataset. Create new variables in the original `wine` dataset that consist of
+*standardized values* for the predictors of interest. To create a standardized
+value, subtract each observation from the sample mean of the variable, and then
+divide this by the sample standard deviation of the variable. This gives us an
+estimate of how many standard deviations away from the mean each observation is.
+Overwrite the `wine` dataset with these additional variables so they can be used 
+for later analyses.
+
+
+```{r}
+wine = wine %>% 
+    mutate(
+        alcohol_std = (alcohol - mean(alcohol))/sd(alcohol),
+        malic_std = (malic - mean(malic))/sd(malic),
+        ash_std = (ash - mean(ash))/sd(ash),
+        phenols_std = (phenols - mean(phenols))/sd(phenols),
+        color_std = (color - mean(color))/sd(color),
+    )
+```
+
+
+6. Create `wine_train_std` and `wine_test_std` as new training and testing
+datasets that contain only these new standardized predictors. Fit the k-NN model 
+on the training dataset, with k varying from 1 to 12. Which value of k results 
+in the greatest prediction accuracy in our new testing dataset, and what was
+the prediction accuracy? Comment on your findings.
+
+
+```{r}
+wine_train_std = wine %>% 
+    slice(-indices) %>% 
+    select(alcohol_std, malic_std, ash_std, phenols_std, color_std)
+
+wine_test_std = wine %>% 
+    slice(indices) %>% 
+    select(alcohol_std, malic_std, ash_std, phenols_std, color_std)
+
+```
+
+```{r}
+acc_pc <- numeric(12)
+for (i in 1:12){
+    knn_model = knn(wine_train_std,
+                wine_test_std, 
+                train_type,
+                k=i,
+                prob = F,
+                use.all = T)
+    acc_pc[i] = mean(knn_model == true_type)
+}
+
+which.max(acc_pc)
+```
+
+
+```{r}
+tibble(acc_pc) %>% 
+    slice(which.max(acc_pc))
+```
+
+
+
+## Logistic regression
+
+7. The `R` function `glm()` requires for logistic regression that the response
+variable takes on values of 0 or 1. Create a new variable in the training
+dataset named `bin_type` that is 0 if the wine was type A, and 1 if the wine was
+type B.
+
+    Hint: Remember to use `tidyverse` syntax, for instance using `if_else()` or 
+    `case_when()`.
+
+
+```{r}
+wine_train = wine %>% 
+    mutate(bin_type = ifelse(type == "A", 0, 1)) %>% 
+    slice(-indices)
+```
+
+
+8. Create a logistic regression model for the estimated 
+probability of being type B wine, based on the original (unstandardized) 
+predictors as found in the training dataset `wine_train`. 
+Interpret each coefficient. 
+
+```{r}
+logistic = glm(data = wine_train,
+               bin_type ~ alcohol + malic + ash + phenols + color,
+               family = "binomial")
+```
+
+```{r}
+tidy(logistic)
+```
+
+The change is in log-odds.
+
+
+9. Calculate the predicted probabilities of being type B wine for each one of 
+the 25 individuals in the test dataset based on the logistic regression model, 
+and then classify them, using 0.5 as the decision boundary. Display the 
+predictions (type A vs. B). What is the prediction accuracy? 
+
+```{r}
+test_prediction = augment(logistic, newdata = wine_test) %>% 
+    mutate(prob = exp(.fitted)/(1+exp(.fitted)),
+           class = ifelse(prob > 0.5, "B", "A")) %>% 
+    pull(class)
+
+```
+
+
+```{r}
+mean(test_prediction == true_type)
+```
+
+
+## Submission
+
+Knit to PDF to create a PDF document. Stage and commit all remaining changes,
+and push your work to GitHub. Make sure all files are updated on your 
+GitHub repo.
+
+Please only upload your PDF document to Gradescope. Associate the “Overall” 
+graded section with the first page of your PDF, and mark where each answer 
+is to the exercises. If any answer spans multiple pages, then mark all pages.
+
+Only one team member needs to submit for the group. After you hit submit, 
+go to View or edit group and select all your team members from the drop-down
+menu.
