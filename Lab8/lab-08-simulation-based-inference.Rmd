@@ -109,15 +109,61 @@ at the .05 significance level.
 
 3. Create a well-labelled plot of the null distribution and shade the
    p-value.
-   
+
+```{r}
+sample_mean = ncbirths %>% 
+   filter(whitemom == "white") %>% 
+   summarise(avg_weight = mean(weight)) %>% 
+   pull()
+```
+
+```{r}
+null_dist = ncbirths %>% 
+   filter(whitemom == "white") %>% 
+   specify(response = weight) %>% 
+   hypothesize(null = "point", mu=7.43) %>% 
+   generate(reps = 5000, type = "bootstrap") %>% 
+   calculate(stat = "mean")
+```
+
+```{r}
+null_dist %>% 
+   visualise() +
+   shade_p_value(obs_stat = sample_mean,
+                 direction = "two_sided")
+```
+
+
 4. Compute the p-value and interpret your findings within the context of the
    data and research question.
-   
+
+```{r}
+null_dist %>% 
+   get_p_value(obs_stat = sample_mean,
+               direction = "two_sided")
+```
+Since p-value is less than the confidence level, 0.05, we reject the null hypothesis.
+
+ 
 5. Compute a 95% confidence interval for the population mean weight of 
    Caucasian babies born in NC. Does this interval cover the value of $\mu$
    under your specified null hypothesis in Exercise 2? Explain why it does
    or does not.
-   
+
+```{r}
+ncbirths %>% 
+   filter(whitemom == "white") %>% 
+   specify(response = weight) %>% 
+   generate(reps = 5000, type = "bootstrap") %>% 
+   calculate(stat = "mean") %>% 
+   summarise(lb = quantile(stat, 0.025),
+             ub = quantile(stat, 0.975))
+```
+
+
+The confidence interval does not include the mu, 7.43. The confidence interval should be consistent with the hypothesis testing, and they should be equivalent.
+
+
 ## Baby weight vs. smoking
 
 Consider the possible relationship between a mother's smoking habit and the 
@@ -129,6 +175,15 @@ questions.
     `weight`. What does the plot highlight about the relationship between these 
     two variables?
 
+
+```{r}
+ncbirths %>% 
+   ggplot(aes(x=habit,y=weight)) +
+   geom_boxplot()
+```
+The median weight of the babies seems to be lower from moms who smoke than those from moms who do not smoke.
+
+
 7. Before moving forward, save a version of the dataset omitting observations 
    where there are NAs for `habit`. You can call this version 
    `ncbirths_habitgiven`.
@@ -137,6 +192,12 @@ The box plots show how the medians of the two distributions compare, but we can
 also compare the means of the distributions using the following to 
 first group the data by the `habit` variable, and then calculate the mean
 `weight` in these groups using.
+
+
+```{r}
+ncbirths_habitgiven = ncbirths %>% 
+   filter(!is.na(habit))
+```
 
 ```{r eval=FALSE}
 ncbirths_habitgiven %>%
@@ -148,18 +209,52 @@ There is an observed difference based on our sample data, but we want to know
 if the difference is statistically significant. In order to answer this 
 question we will conduct a hypothesis test.
 
+
+
 8. Write the hypotheses for testing if the average weights of babies born to 
    smoking and non-smoking mothers are different. Define the difference as
    smoking - non-smoking.
 
+H0: mu-smoking = mu-nonsmoking
+Ha: mu=smoking != mu-nonsmoking
+
+
+
 9. Perform an appropriate hypothesis test at the 0.10 significance level, 
    calculate the p-value, and interpret the results in the context of the data 
    and research question.
+
+```{r}
+mean_diff = ncbirths_habitgiven %>% 
+   group_by(habit) %>% 
+   summarise(mean_weight = mean(weight)) %>% 
+   pull(mean_weight) %>% 
+   diff()
+```
+
+
+```{r}
+ncbirths_habitgiven %>%
+   specify(response = weight, explanatory = habit) %>%
+   hypothesize(null = "independence") %>%
+   generate(1000, type = "permute") %>%
+   calculate(stat = "diff in means", 
+             order = c("smoker", "nonsmoker")) %>% 
+   get_p_value(obs_stat = mean_diff, direction = "two_sided")
+   
+```
+
    
 10. Given your conclusion in Exercise 9, which type of error could you possibly
    have made. What does this mean in the context of the testing problem.
    
+Type 1 error: since we rejected the null hypothesis. but the null hypothesis could be true.   
+
+
 11. In this testing framework, what is the probability of a type I error?
+
+0.1 = alpha
+
 
 # Submission
 

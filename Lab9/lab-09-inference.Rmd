@@ -1,0 +1,157 @@
+---
+title: "Lab 09 - More inference"
+subtitle: "Due: Friday, Apr 17 at 11:59pm EST"
+output:
+  tufte::tufte_html:
+    tufte_variant: "envisioned"
+    highlight: pygments
+    css: "labs.css"
+link-citations: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, comment = "#>")
+```
+
+# Introduction
+
+The data are a sample of 500 observations in a study where air pollution at a 
+road is related to traffic volume and meteorological variables. All data was
+collected by the Norwegian Public Roads Administration. 
+
+# Getting started
+
+Clone your assignment repo into RStudio Cloud and open the R Markdown file.
+Don't forget to load in the necessary packages and configure git.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(infer)
+library(broom)
+```
+
+```{r eval=FALSE}
+library(usethis)
+use_git_config(user.name="your name", user.email="your email")
+```
+
+If you would like your git password cached for a week for this project, type 
+the following in the Terminal:
+
+`git config --global credential.helper 'cache --timeout 604800'`
+
+You will need to enter your GitHub username and password one more time after 
+caching the password.This is only good for this single RStudio Cloud project; 
+you will need to cache your credentials for each project you create.
+
+# Data
+
+The response variable (column 1) consist of hourly values of the logarithm 
+of the concentration of $\mbox{NO}_2$ (particles), measured at 
+Alnabru in Oslo, Norway. 
+The predictor variables (columns 2 to 8) 
+are the logarithm of the number of cars per hour, temperature 2 meter above 
+ground (degree C), wind speed (meters/second), the temperature difference 
+between 25 and 2 meters above ground (degree C), wind direction 
+(degrees between 0 and 360), hour of day and day number from October 1, 2001.
+
+```{marginfigure}
+StatLib---Datasets Archive. (2020). Lib.stat.cmu.edu. Retrieved 7 April 2020, 
+from http://lib.stat.cmu.edu/datasets/
+````
+
+```{r read_data, eval=FALSE}
+no <- read_delim(file = "http://lib.stat.cmu.edu/datasets/NO2.dat",
+                 delim = "\t", col_names = FALSE)
+```
+
+# Set a seed
+
+Before you get started, set the seed so each person in your group will
+be able to reproduce your analysis.
+
+```{r}
+set.seed(8675309)
+```
+
+# Exercises
+
+In addition to the linear model fitting functions, statistical distribution 
+functions, and base R arithmetic functions, your code should only contain 
+functions from the loaded R packages above unless explicitly stated in an 
+Exercise.
+
+## Data cleaning and exploration
+
+1. Fix the column names in `no` to something meaningful.
+
+2. Create a well-polished visualization that investigates the relationship 
+   between log concentration of $\mbox{NO}_2$ and the hour of the day. 
+
+3. Comment on what you observe from your visualization in Exercise 2.
+   
+## CLT-based inference
+
+4. Create a 95% confidence interval for the mean log concentration of 
+   $\mbox{NO}_2$.
+   What assumptions must hold for this interval estimate to be valid?
+
+5. Let $\mu$ be the mean number of cars per hour that travel on Alnabru in Oslo, 
+   Norway. Suppose the average number of cars per hour
+   that travel on similar roads is known to be 2000. Is the sample data in
+   `no` strong enough evidence at the $\alpha = .05$ level to suggest that 
+   the road in Alnabru is less traveled?
+   
+6. Assume all population parameters are unknown. In a general hypothesis 
+   testing framework, what is the smallest observed
+   test statistic value, $\frac{\bar{x} - \mu_0}{s / \sqrt{n}}$, we could 
+   obtain and still reject the null hypothesis
+   at the $\alpha = 0.01$ significance level when $H_A: \mu > \mu_0$ and $n=32$.
+   Here quantity $\mu_0$ represents the value of $\mu$ under the null 
+   hypothesis.
+   
+7. If you reject the null hypothesis at the $\alpha = 0.02$ significance level, 
+   then you will also reject the null hypothesis at the $\alpha = 0.01$
+   significance level. Explain in detail, or with an example, why this
+   claim is true or false.
+
+## Regression inference
+
+8. Consider a linear model with log concentration of $\mbox{NO}_2$ as the 
+   response and temperature 2 meter above ground (degree C) as the single 
+   predictor. Compare the simulation-based inference 90% confidence interval 
+   for the slope and the 90% confidence interval for the slope derived from the
+   regression output. You may assume the linear regression conditions hold 
+   without verifying via plot diagnostics.
+
+9. Perform backwards elimination with AIC as the selection criteria, where the
+   full model consists of predictors in columns 2 through 7 of `no` and the
+   response is log concentration of $\mbox{NO}_2$. Display the model terms, 
+   estimates    and p-values in a tidy format. *Hint*: sort the data 
+   chronologically before model fitting, it will make things easier in 
+   Exercise 10.
+   
+10. Check if all the linear model conditions are satisfied for the final model
+    from Exercise 9.
+   
+11. Compute 95% confidence intervals for two coefficients in your final
+    model from Exercise 9. Provide an interpretation for these intervals.
+
+# Submission
+
+Knit to PDF to create a PDF document. Stage and commit all remaining changes,
+and push your work to GitHub. Make sure all files are updated on your 
+GitHub repo.
+
+Please only upload your PDF document to Gradescope. Associate the “Overall” 
+graded section with the first page of your PDF, and mark where each answer 
+is to the exercises. If any answer spans multiple pages, then mark all pages.
+
+Only one team member needs to submit for the group. After you hit submit, 
+go to View or edit group and select all your team members from the drop-down
+menu.
+
+# References
+
+- StatLib---Datasets Archive. (2020). Lib.stat.cmu.edu. Retrieved 7 April 2020, 
+  from http://lib.stat.cmu.edu/datasets/
